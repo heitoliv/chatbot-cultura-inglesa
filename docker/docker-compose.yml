@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+
+  # ── Banco de dados do Typebot ──────────────────────
+  typebot-db:
+    image: postgres:15
+    container_name: typebot-db
+    restart: always
+    environment:
+      POSTGRES_DB: typebot
+      POSTGRES_USER: typebot
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - typebot-db-data:/var/lib/postgresql/data
+    networks:
+      - chatbot-net
+
+  # ── Redis (sessões e cache) ─────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    networks:
+      - chatbot-net
+
+  # ── Typebot Builder (painel visual) ────────────────
+  typebot-builder:
+    image: baptistearno/typebot-builder:latest
+    container_name: typebot-builder
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - typebot-db
+    environment:
+      DATABASE_URL: postgresql://typebot:${DB_PASSWORD}@typebot-db/typebot
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      ENCRYPTION_SECRET: ${ENCRYPTION_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+    networks:
+      - chatbot-net
+
+  # ── Typebot Viewer (execução dos fluxos) ───────────
+  typebot-viewer:
+    image: baptistearno/typebot-viewer:latest
+    container_name: typebot-viewer
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://typebot:${DB_PASSWORD}@typebot-db/typebot
+      NEXTAUTH_URL: http://localhost:3000
+      ENCRYPTION_SECRET: ${ENCRYPTION_SECRET}
+    networks:
+      - chatbot-net
+
+  # ── n8n (integrações e automações) ─────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_USER}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD}
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      WEBHOOK_URL: http://localhost:5678
+    volumes:
+      - n8n-data:/home/node/.n8n
+    networks:
+      - chatbot-net
+
+  # ── Evolution API (ponte com WhatsApp) ─────────────
+  evolution-api:
+    image: atendai/evolution-api:latest
+    container_name: evolution-api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_URL: http://localhost:8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://typebot:${DB_PASSWORD}@typebot-db/evolution
+    volumes:
+      - evolution-data:/evolution/instances
+    depends_on:
+      - typebot-db
+      - redis
+    networks:
+      - chatbot-net
+
+volumes:
+  typebot-db-data:
+  n8n-data:
+  evolution-data:
+
+networks:
+  chatbot-net:
+    driver: bridge
