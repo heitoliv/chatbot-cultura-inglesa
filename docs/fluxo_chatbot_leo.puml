@@ -1,0 +1,205 @@
+@startuml fluxo_chatbot_leo
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam ArrowColor #555555
+skinparam ArrowThickness 1.2
+
+skinparam activity {
+  BackgroundColor #F5F7FA
+  BorderColor #AAAAAA
+  BorderThickness 1
+  FontColor #222222
+  FontSize 13
+}
+
+skinparam activityDiamond {
+  BackgroundColor #EEEDFE
+  BorderColor #534AB7
+  FontColor #3C3489
+  FontSize 12
+}
+
+skinparam note {
+  BackgroundColor #FFF8EC
+  BorderColor #E87722
+  FontColor #633806
+  FontSize 11
+}
+
+skinparam partition {
+  BackgroundColor #F0F4FF
+  BorderColor #2E75B6
+  FontColor #1A3E6F
+  FontSize 13
+}
+
+title <b>Fluxo de Atendimento — Leo (Cultura Inglesa)</b>
+
+start
+
+:Leo se apresenta\n**"Bem-vindo(a) à Cultura Inglesa!"\n"Eu sou o Leo, como posso ajudar?"**;
+
+diamond "Você já é\nnosso aluno?" as raiz
+raiz --> [A — Sim] ramoA
+raiz --> [B — Não] ramoB
+
+' ═══════════════════════════════
+' RAMO A — ALUNO
+' ═══════════════════════════════
+partition "**Ramo A — Aluno atual**" {
+
+  :ramoA: **Identificar setor**\nSecretaria / Financeiro / Outros;
+
+  diamond "Qual setor\ndeseja?" as setorA
+
+  setorA --> [Secretaria] secretaria
+  setorA --> [Financeiro] financeiro
+  setorA --> [Outros] outrosAluno
+
+  ' ── Secretaria ──
+  partition "Secretaria" {
+    :secretaria: **Secretaria**\nQual o motivo?;
+
+    diamond "Motivo?" as motivoSecr
+
+    motivoSecr --> [Acesso ao portal] acessoPortal
+    motivoSecr --> [Esqueceu senha] resetSenha
+    motivoSecr --> [Outros] outrosSecr
+
+    :acessoPortal: Solicitar e-mail ou\nnome completo → equipe verifica;
+    stop
+
+    :resetSenha: Solicitar e-mail ou\nnome completo → fazer reset;
+    stop
+
+    :outrosSecr: Solicitar nome + contato\n+ descrição da solicitação;
+    stop
+  }
+
+  ' ── Financeiro ──
+  partition "Financeiro" {
+    :financeiro: **Financeiro**\nPortal do aluno disponível;
+
+    diamond "Necessidade\nfinanceira?" as necFin
+
+    necFin --> [Boleto] boleto
+    necFin --> [Material didático] material
+    necFin --> [Outros financeiro] outrosFin
+
+    :boleto: Solicitar e-mail/nome\n→ enviar boleto ou link;
+    stop
+
+    :material: Acessar portal:\nwww.culturainglesa.com.br\n→ "JÁ SOU ALUNO" → login;
+    stop
+
+    :outrosFin: Informar que equipe\nretornará em breve;
+    stop
+  }
+
+  ' ── Outros aluno ──
+  partition "Outros (Aluno)" {
+    :outrosAluno: <color:#993C1D>**Caso não mapeado**</color>\nColetar: nome, contato e mensagem;
+
+    :Transferir para\n**atendente humano**\nFila de atendimento;
+    note right: Alternativa:\nligue (27) 3086-3236
+    stop
+  }
+
+}
+
+' ═══════════════════════════════
+' RAMO B — PROSPECTO
+' ═══════════════════════════════
+partition "**Ramo B — Novo aluno / Prospecto**" {
+
+  :ramoB: **Apresentação institucional**\n"A Cultura Inglesa é a escola mais\npremiada e renomada do Brasil.\nMais de 90 anos de experiência.";
+
+  :Q1 — Qualificação\n**Nome completo e idade**;
+
+  :Q2 — Unidade de interesse\n**(1) Alphaville   (2) Jardim Camburi**\n**(3) CEC   (4) Laranjeiras**;
+
+  :Q3 — Experiência prévia\n**Já estudou inglês antes?**\n**Se sim: há quanto tempo?**;
+
+  diamond "Modalidade\ndesejada?" as modal
+
+  modal --> [Presencial] presencial
+  modal --> [Online / VIP /\nCertificação] vip
+
+  ' ── Presencial ──
+  partition "Presencial — Agendamento" {
+    :presencial: **Aula presencial**\nColetar disponibilidade de datas e horários;
+
+    diamond "Quer fazer\nteste de\nnivelamento?" as nivelamento
+
+    nivelamento --> [Sim] agendarTeste
+    nivelamento --> [Não / Deixar contato] deixarContato
+
+    :agendarTeste: Coletar datas e horários\ndisponíveis para agendamento;
+    :Transferir para\n**Equipe de Vendas**;
+    note right: Equipe retorna para\nconfirmar o teste
+    stop
+
+    :deixarContato: Registrar nome e contato\nEquipe retorna em breve;
+    stop
+  }
+
+  ' ── VIP / Certificação ──
+  partition "VIP / Certificação" {
+    :vip: <color:#993C1D>**VIP ou Certificação**</color>\nColetar nome e contato;
+
+    :Transferir para\n**Equipe de Vendas**;
+
+    note right
+      <b>⚠ ATENÇÃO</b>
+      Notificar Gerência
+      com brevidade
+    end note
+    stop
+  }
+
+}
+
+' ═══════════════════════════════
+' VERIFICAÇÃO DE PARCEIROS (pós qualificação)
+' ═══════════════════════════════
+partition "**Parceiros de Desconto**" {
+
+  diamond "Possui parceria\ncom empresa\nparceira?" as parceiro
+
+  parceiro --> [Sim] temParceiro
+  parceiro --> [Não] semParceiro
+
+  :temParceiro: Identificar parceiro\n(ver lista de convênios)\nAcionar Secretaria para verificação;
+  stop
+
+  :semParceiro: Seguir fluxo\nsem desconto especial;
+  stop
+
+}
+
+' ═══════════════════════════════
+' FLUXO DE ESCALONAMENTO
+' ═══════════════════════════════
+partition "**Escalonamento — Transferência Obrigatória**" {
+
+  note
+    <b>Transferência imediata para atendente humano:</b>
+    • Reclamação formal ou insatisfação
+    • Negociação de valores / descontos especiais
+    • Cancelamento de matrícula
+    • Questões jurídicas ou inadimplência
+    • Qualquer situação fora do fluxo mapeado
+  end note
+
+  :Coletar: nome, contato\ne descrição do problema;
+
+  :**Transferir para atendente**\n"Aguarde — você será atendido(a) em breve.";
+
+  stop
+
+}
+
+@enduml
